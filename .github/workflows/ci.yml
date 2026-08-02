@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api-python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run pytest
+        run: pytest -q
+
+  test-go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run go test
+        run: go test ./...
+      - name: Build binary
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+        run: go build -o /tmp/api-go ./
+
+  publish-images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - test-python
+      - test-go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Python image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/api-python
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/api-python:latest
+            ghcr.io/${{ github.repository }}/api-python:${{ github.sha }}
+      - name: Build and push Go image
+        uses: docker/build-push-action@v6
+        with:
+          context: services/api-go
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/api-go:latest
+            ghcr.io/${{ github.repository }}/api-go:${{ github.sha }}
+
+  scan-images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: publish-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Trivy scan for Python image
+        continue-on-error: true
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/api-python:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ github.repository }}/api-python:latest
+      - name: Run Trivy scan for Go image
+        continue-on-error: true
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/api-go:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ github.repository }}/api-go:latest
