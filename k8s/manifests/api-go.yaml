@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-go
+  labels:
+    app: api-go
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-go
+  template:
+    metadata:
+      labels:
+        app: api-go
+    spec:
+      containers:
+        - name: api-go
+          image: ghcr.io/fabdev10/api-go:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: api-go-config
+            - secretRef:
+                name: api-go-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-go
+  labels:
+    app: api-go
+spec:
+  type: ClusterIP
+  selector:
+    app: api-go
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http

@@ -1,0 +1,61 @@
+{{- $python := .Values.apiPython -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "blog-app.name" . }}-api-python
+  labels:
+    {{- include "blog-app.labels" . | nindent 4 }}
+    app: api-python
+spec:
+  replicas: {{ $python.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-python
+  template:
+    metadata:
+      labels:
+        app: api-python
+        {{- include "blog-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: api-python
+          image: "{{ $python.image.repository }}:{{ $python.image.tag }}"
+          imagePullPolicy: {{ $python.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: {{ $python.env.PORT | quote }}
+            - name: SERVICE_NAME
+              value: {{ $python.env.SERVICE_NAME | quote }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml $python.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blog-app.name" . }}-api-python
+  labels:
+    app: api-python
+    {{- include "blog-app.labels" . | nindent 4 }}
+spec:
+  type: {{ $python.service.type }}
+  selector:
+    app: api-python
+  ports:
+    - port: {{ $python.service.port }}
+      targetPort: 8000
+      protocol: TCP
+      name: http

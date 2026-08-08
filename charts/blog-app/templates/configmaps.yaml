@@ -1,0 +1,23 @@
+{{- $python := .Values.apiPython -}}
+{{- $go := .Values.apiGo -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blog-app.name" . }}-api-python-config
+  labels:
+    {{- include "blog-app.labels" . | nindent 4 }}
+    app: api-python
+data:
+  PORT: {{ $python.env.PORT | quote }}
+  SERVICE_NAME: {{ $python.env.SERVICE_NAME | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blog-app.name" . }}-api-go-config
+  labels:
+    {{- include "blog-app.labels" . | nindent 4 }}
+    app: api-go
+data:
+  PORT: {{ $go.env.PORT | quote }}
+  SERVICE_NAME: {{ $go.env.SERVICE_NAME | quote }}

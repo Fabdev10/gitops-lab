@@ -1,0 +1,3 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your services are available through ingress at {{ .Values.ingress.host }}.

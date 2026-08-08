@@ -1,0 +1,61 @@
+{{- $go := .Values.apiGo -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "blog-app.name" . }}-api-go
+  labels:
+    {{- include "blog-app.labels" . | nindent 4 }}
+    app: api-go
+spec:
+  replicas: {{ $go.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-go
+  template:
+    metadata:
+      labels:
+        app: api-go
+        {{- include "blog-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: api-go
+          image: "{{ $go.image.repository }}:{{ $go.image.tag }}"
+          imagePullPolicy: {{ $go.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: {{ $go.env.PORT | quote }}
+            - name: SERVICE_NAME
+              value: {{ $go.env.SERVICE_NAME | quote }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml $go.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blog-app.name" . }}-api-go
+  labels:
+    app: api-go
+    {{- include "blog-app.labels" . | nindent 4 }}
+spec:
+  type: {{ $go.service.type }}
+  selector:
+    app: api-go
+  ports:
+    - port: {{ $go.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http

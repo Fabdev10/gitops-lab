@@ -1,0 +1,58 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/fabdev10/api-python
+  tag: latest
+  pullPolicy: IfNotPresent
+
+apiPython:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/fabdev10/api-python
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    PORT: "8000"
+    SERVICE_NAME: api-python
+  secretToken: "example-token"
+
+apiGo:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/fabdev10/api-go
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    PORT: "8080"
+    SERVICE_NAME: api-go
+  secretToken: "example-secret"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: example.local
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  tls:
+    enabled: true
+    secretName: blog-app-tls

@@ -1,0 +1,38 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "blog-app.name" . }}
+  labels:
+    {{- include "blog-app.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api/posts
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "blog-app.name" . }}-api-python
+                port:
+                  number: {{ .Values.apiPython.service.port }}
+          - path: /api/comments
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "blog-app.name" . }}-api-go
+                port:
+                  number: {{ .Values.apiGo.service.port }}
+{{- end }}
