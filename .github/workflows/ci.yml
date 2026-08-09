@@ -68,16 +68,16 @@ jobs:
           context: services/api-python
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/api-python:latest
-            ghcr.io/${{ github.repository }}/api-python:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository) }}/api-python:latest
+            ghcr.io/${{ toLower(github.repository) }}/api-python:${{ github.sha }}
       - name: Build and push Go image
         uses: docker/build-push-action@v6
         with:
           context: services/api-go
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/api-go:latest
-            ghcr.io/${{ github.repository }}/api-go:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository) }}/api-go:latest
+            ghcr.io/${{ toLower(github.repository) }}/api-go:${{ github.sha }}
 
   scan-images:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -87,10 +87,10 @@ jobs:
       - name: Run Trivy scan for Python image
         continue-on-error: true
         run: |
-          docker pull ghcr.io/${{ github.repository }}/api-python:latest
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ github.repository }}/api-python:latest
+          docker pull ghcr.io/${{ toLower(github.repository) }}/api-python:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ toLower(github.repository) }}/api-python:latest
       - name: Run Trivy scan for Go image
         continue-on-error: true
         run: |
-          docker pull ghcr.io/${{ github.repository }}/api-go:latest
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ github.repository }}/api-go:latest
+          docker pull ghcr.io/${{ toLower(github.repository) }}/api-go:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasecurity/trivy:latest image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 ghcr.io/${{ toLower(github.repository) }}/api-go:latest
