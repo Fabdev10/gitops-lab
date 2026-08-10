@@ -1,0 +1,23 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: blog-app
+  namespace: dev
+spec:
+  interval: 5m
+  releaseName: blog-app
+  chart:
+    spec:
+      chart: ./charts/blog-app
+      sourceRef:
+        kind: GitRepository
+        name: gitops-lab
+        namespace: flux-system
+  valuesFiles:
+    - values.yaml
+    - values-dev.yaml
+  remediation:
+    retries: 3
+    remediateLastFailure: true
+  rollback:
+    cleanupOnFail: true
