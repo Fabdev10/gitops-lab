@@ -6,4 +6,5 @@ metadata:
 spec:
   interval: 1m
   url: https://github.com/Fabdev10/gitops-lab.git
-  branch: main
+  ref:
+    branch: main
