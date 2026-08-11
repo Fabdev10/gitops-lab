@@ -1,14 +1,14 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/fabdev10/api-python
+  repository: ghcr.io/fabdev10/gitops-lab/api-python
   tag: latest
   pullPolicy: IfNotPresent
 
 apiPython:
   replicaCount: 1
   image:
-    repository: ghcr.io/fabdev10/api-python
+    repository: ghcr.io/fabdev10/gitops-lab/api-python
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -29,7 +29,7 @@ apiPython:
 apiGo:
   replicaCount: 1
   image:
-    repository: ghcr.io/fabdev10/api-go
+    repository: ghcr.io/fabdev10/gitops-lab/api-go
     tag: latest
     pullPolicy: IfNotPresent
   service:
