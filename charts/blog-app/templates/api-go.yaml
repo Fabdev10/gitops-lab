@@ -17,6 +17,8 @@ spec:
         app: api-go
         {{- include "blog-app.selectorLabels" . | nindent 8 }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api-go
           image: "{{ $go.image.repository }}:{{ $go.image.tag }}"

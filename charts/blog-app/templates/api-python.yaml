@@ -17,6 +17,8 @@ spec:
         app: api-python
         {{- include "blog-app.selectorLabels" . | nindent 8 }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: api-python
           image: "{{ $python.image.repository }}:{{ $python.image.tag }}"
